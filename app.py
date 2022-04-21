@@ -163,16 +163,16 @@ def github():
 
     '''
     Monthly Closed Issues
-    Format the data by grouping the data by month
+    Format the data by grouping the data by WEEK
     ''' 
     
     closed_at = df['closed_at'].sort_values(ascending=True)
     month_issue_closed = pd.to_datetime(
         pd.Series(closed_at), format='%Y/%m/%d')
-    month_issue_closed.index = month_issue_closed.dt.to_period('m')
+    month_issue_closed.index = month_issue_closed.dt.to_period('w')
     month_issue_closed = month_issue_closed.groupby(level=0).size()
     month_issue_closed = month_issue_closed.reindex(pd.period_range(
-        month_issue_closed.index.min(), month_issue_closed.index.max(), freq='m'), fill_value=0)
+        month_issue_closed.index.min(), month_issue_closed.index.max(), freq='w'), fill_value=0)
     month_issue_closed_dict = month_issue_closed.to_dict()
     closed_at_issues = []
     for key in month_issue_closed_dict.keys():
