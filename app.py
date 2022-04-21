@@ -13,7 +13,15 @@ Use Python/GitHub API to retrieve Issues/Repos information of the past 1 year fo
 - https: // github.com/angular/material
 - https: // github.com/angular/angular-cli
 - https: // github.com/d3/d3
+
++++Added+++
+- https://github.com/SebastianM/angular-google-maps
+- https://github.com/facebook/react
+- https://github.com/tensorflow/tensorflow
+- https://github.com/keras-team/keras
+- https://github.com/pallets/flask
 '''
+
 # Import all the required packages 
 import os
 from flask import Flask, jsonify, request, make_response, Response
