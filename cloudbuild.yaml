@@ -20,7 +20,7 @@ steps:
         "--platform",
         "managed",
         "--port",
-        "8000",
+        "5000",
       ]
 images:
   - gcr.io/flask-347722/flask
