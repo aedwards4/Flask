@@ -189,14 +189,16 @@ def github():
 
         data_sets = [pull_data, commit_data, branch_data, collaborator_data, release_data]
         data_responses = [pull_reponse, commit_reponse, branch_reponse, collaborator_reponse, release_reponse]
+
         for i in range(len(data_sets)):
             data = {}
-            x = data_sets[i]
-            if x is None:
+            set = data_sets[i]
+            if set is None:
                 continue
             else:
-                for y in x:
-                    data['pull_created_at'] = y["created_at"][0:10]
+                print(set)
+                for item in set:
+                    data['pull_created_at'] = item["created_at"][0:10]
                 data_responses[i].append(data)
 
         # --------------------------------------
