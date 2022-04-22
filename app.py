@@ -196,7 +196,7 @@ def github():
                 continue
             else:
                 for y in x:
-                    data['pull_created_at'] = y['created_at'][0:10]
+                    data['pull_created_at'] = y["created_at"][0:10]
                 data_responses[i].append(data)
 
         # --------------------------------------
