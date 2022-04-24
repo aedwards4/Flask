@@ -54,6 +54,7 @@ def build_actual_response(response):
                          "PUT, GET, POST, DELETE, OPTIONS")
     return response
 
+today = date.today()
 '''
 API route path is  "/api/forecast"
 This API will accept only POST request
@@ -97,7 +98,7 @@ def github():
 
     # --------------------------------------
 
-    today = date.today()
+    # today = datetime.today()
 
     issues_reponse = []
     # Iterating to get issues for every month for the past 12 months
