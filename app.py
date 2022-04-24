@@ -61,6 +61,9 @@ This API will accept only POST request
 '''
 @app.route('/api/github', methods=['POST'])
 def github():
+    global date
+    global today
+
     body = request.get_json()
     # Extract the choosen repositories from the request
     repo_name = body['repository']
@@ -98,7 +101,7 @@ def github():
 
     # --------------------------------------
 
-    # today = datetime.today()
+    today = date.today()
 
     issues_reponse = []
     # Iterating to get issues for every month for the past 12 months
