@@ -419,22 +419,22 @@ def github():
     }
     commits_body = {
         "issues": commit_reponse,
-        "type": "commits",
+        "type": "commit_created_at",
         "repo": repo_name.split("/")[1]
     }
     branches_body = {
         "issues": branch_reponse,
-        "type": "branches",
+        "type": "branch_created_at",
         "repo": repo_name.split("/")[1]
     }
     collaborators_body = {
         "issues": collaborator_reponse,
-        "type": "collaborators",
+        "type": "collab_created_at",
         "repo": repo_name.split("/")[1]
     }
     releases_body = {
         "issues": release_reponse,
-        "type": "releases",
+        "type": "release_created_at",
         "repo": repo_name.split("/")[1]
     }
 
