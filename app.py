@@ -118,30 +118,6 @@ def github():
         # requsets.get will fetch requested query_url from the GitHub API
         search_issues = requests.get(query_url, headers=headers, params=params)
 
-        # -------- DATA FOR FORECASTING --------
-
-        pull_data = requests.get(pulls)
-        temp_text = pull_data.text
-        pull_data = json.loads(temp_text)
-
-        commit_data = requests.get(commits)
-        temp_text = commit_data.text
-        commit_data = json.loads(temp_text)
-
-        branch_data = requests.get(branches)
-        temp_text = branch_data.text
-        branch_data = json.loads(temp_text)
-
-        collaborator_data = requests.get(collaborators)
-        temp_text = collaborator_data.text
-        collaborator_data = json.loads(temp_text)
-
-        release_data = requests.get(releases)
-        temp_text = release_data.text
-        release_data = json.loads(temp_text)
-
-        # --------------------------------------
-
         # Convert the data obtained from GitHub API to JSON format
         search_issues = search_issues.json()
         issues_items = []
@@ -179,43 +155,87 @@ def github():
             data['Author'] = current_issue["user"]["login"]
             issues_reponse.append(data)
 
-        # -------- DATA FOR FORECASTING --------
-
-        pull_reponse = []
-        commit_reponse = []
-        branch_reponse = []
-        collaborator_reponse = []
-        release_reponse = []
-
-        data_sets = [pull_data, commit_data, branch_data, collaborator_data, release_data]
-        data_responses = [pull_reponse, commit_reponse, branch_reponse, collaborator_reponse, release_reponse]
-
-        for i in range(len(data_sets)):
-            data = {}
-            set = data_sets[i]
-            if set is None:
-                continue
-            else:
-                print(set)
-                for item in set:
-                    data['pull_created_at'] = item["created_at"][0:10]
-                data_responses[i].append(data)
-
-        # --------------------------------------
-
-        today = last_month
-
-    df = pd.DataFrame(issues_reponse)
-
     # -------- DATA FOR FORECASTING --------
 
-    df_pulls = pd.DataFrame(pull_reponse)
-    df_commits = pd.DataFrame(commit_reponse)
-    df_branches = pd.DataFrame(branch_reponse)
-    df_collaborators = pd.DataFrame(collaborator_reponse)
-    df_releases = pd.DataFrame(release_reponse)
+    pull_data = requests.get(pulls, headers=headers)
+    temp_text = pull_data.text
+    pull_data = json.loads(temp_text)
 
+    commit_data = requests.get(commits, headers=headers)
+    temp_text = commit_data.text
+    commit_data = json.loads(temp_text)
+
+    branch_data = requests.get(branches, headers=headers)
+    temp_text = branch_data.text
+    branch_data = json.loads(temp_text)
+
+    collaborator_data = requests.get(collaborators, headers=headers)
+    temp_text = collaborator_data.text
+    collaborator_data = json.loads(temp_text)
+
+    release_data = requests.get(releases, headers=headers)
+    temp_text = release_data.text
+    release_data = json.loads(temp_text)
+
+    pull_reponse = []
+    commit_reponse = []
+    branch_reponse = []
+    collaborator_reponse = []
+    release_reponse = []
+
+    data_sets = [pull_data, commit_data, branch_data, collaborator_data, release_data]
+    data_responses = [pull_reponse, commit_reponse, branch_reponse, collaborator_reponse, release_reponse]
+
+    coll_sets = {}
+    for i in range(len(data_sets)):
+        
+        dset = data_sets[i]
+        if dset is None:
+            continue
+        else:
+            for item in dset:
+                data = {}
+                if i == 0: # pulls - DONE
+                    data['pull_created_at'] = item['created_at'][0:10]
+                elif i == 1: # commits - DONE
+                    commit_url = requests.get(item['url'], headers=headers)
+                    temp_text = commit_url.text
+                    commit = json.loads(temp_text)
+                    print(commit)
+                    data['commit_created_at'] = commit['commit']['author']['date'][0:10]
+                elif i == 2: # branches - DONE
+                    commit_url = requests.get(item['commit']['url'], headers=headers)
+                    temp_text = commit_url.text
+                    commit = json.loads(temp_text)
+                    data['branch_created_at'] = commit['commit']['author']['date'][0:10]
+                elif i == 3:
+                    for commit in commit_data:
+
+                        commit_url = requests.get(commit['url'], headers=headers)
+                        temp_text = commit_url.text
+                        commit = json.loads(temp_text)
+                        date = commit['commit']['author']['date'][0:10]
+                        date_spl = date.split('-')
+                        month = date_spl[1]
+                        contributor = commit['commit']['author']['email']
+
+                        if month in coll_sets.keys():
+                            coll_sets[month].add(contributor)
+                        else:
+                            coll_sets[month] = {contributor}
+                    
+                        
+                elif i == 4: # releases - DONE
+                    data['release_created_at'] = item['created_at'][0:10]
+
+                data_responses[i].append(data)
+
+    collaborator_reponse = [coll_sets]
     # --------------------------------------
+
+    today = last_month
+
+    df = pd.DataFrame(issues_reponse)
 
     # Daily Created Issues
     df_created_at = df.groupby(['created_at'], as_index=False).count()
@@ -261,10 +281,17 @@ def github():
 
     # -------- DATA FOR FORECASTING --------
 
-    # Pulls
-    df_pulls = df_pulls.sort_values(ascending=True)
+    '''
+    Monthly Pulls
+    Format the data by grouping the data by month
+    ''' 
+
+    df_pulls = pd.DataFrame(pull_reponse)
+    df_pulls.rename(columns={'pull_created_at':'ds'}, inplace=True)
+    df_pulls['y'] = 1
+    df_pulls = df_pulls.sort_values(by=['ds'],ascending=True)
     pull_month = pd.to_datetime(
-        pd.Series(df_pulls), format='%Y/%m/%d')
+    pd.Series(df_pulls['ds']), format='%Y/%m/%d')
     pull_month.index = pull_month.dt.to_period('m')
     pull_month = pull_month.groupby(level=0).size()
     pull_month = pull_month.reindex(pd.period_range(
@@ -274,11 +301,20 @@ def github():
     for key in pull_month.keys():
         array = [str(key), pull_month[key]]
         p_data.append(array)
+    df_pulls = pd.DataFrame(p_data)
+    df_pulls.rename(columns={0:'ds', 1:'y'}, inplace=True)   
 
-    # Commits
-    df_commits = df_commits.sort_values(ascending=True)
+    
+    '''
+    Monthly Commits
+    Format the data by grouping the data by month
+    ''' 
+    df_commits = pd.DataFrame(commit_reponse)
+    df_commits.rename(columns={'commit_created_at':'ds'}, inplace=True)
+    df_commits['y'] = 1
+    df_commits = df_commits.sort_values(by=['ds'],ascending=True)
     commit_month = pd.to_datetime(
-        pd.Series(df_commits), format='%Y/%m/%d')
+    pd.Series(df_commits['ds']), format='%Y/%m/%d')
     commit_month.index = commit_month.dt.to_period('m')
     commit_month = commit_month.groupby(level=0).size()
     commit_month = commit_month.reindex(pd.period_range(
@@ -288,11 +324,20 @@ def github():
     for key in commit_month.keys():
         array = [str(key), commit_month[key]]
         comm_data.append(array)
+    df_commits = pd.DataFrame(comm_data)
+    df_commits.rename(columns={0:'ds', 1:'y'}, inplace=True) 
 
-    # Branches
-    df_branches = df_branches.sort_values(ascending=True)
+    
+    '''
+    Monthly Branches
+    Format the data by grouping the data by month
+    ''' 
+    df_branches = pd.DataFrame(branch_reponse)
+    df_branches.rename(columns={'branch_created_at':'ds'}, inplace=True)
+    df_branches['y'] = 1
+    df_branches = df_branches.sort_values(by=['ds'],ascending=True)
     branch_month = pd.to_datetime(
-        pd.Series(df_branches), format='%Y/%m/%d')
+    pd.Series(df_branches['ds']), format='%Y/%m/%d')
     branch_month.index = branch_month.dt.to_period('m')
     branch_month = branch_month.groupby(level=0).size()
     branch_month = branch_month.reindex(pd.period_range(
@@ -302,36 +347,47 @@ def github():
     for key in branch_month.keys():
         array = [str(key), branch_month[key]]
         b_data.append(array)
+    df_branches = pd.DataFrame(b_data)
+    df_branches.rename(columns={0:'ds', 1:'y'}, inplace=True) 
 
-    # Collaborators
-    df_collaborators = df_collaborators.sort_values(ascending=True)
-    collaborator_month = pd.to_datetime(
-        pd.Series(df_collaborators), format='%Y/%m/%d')
-    collaborator_month.index = collaborator_month.dt.to_period('m')
-    collaborator_month = collaborator_month.groupby(level=0).size()
-    collaborator_month = collaborator_month.reindex(pd.period_range(
-        collaborator_month.index.min(), collaborator_month.index.max(), freq='m'), fill_value=0)
-    collaborator_month = collaborator_month.to_dict()
-    coll_data = []
-    for key in collaborator_month.keys():
-        array = [str(key), collaborator_month[key]]
-        coll_data.append(array)
+    
+    '''
+    Monthly Collaborators
+    Format the data by grouping the data by month
+    ''' 
+    collab_ds = []
+    collab_y = []
+    for key in coll_sets.keys():
+        count = len(coll_sets[key])
+        coll_sets[key] = count
+        collab_ds.append(key)
+        collab_y.append(coll_sets[key])
+    dfdata = {'ds': collab_ds, 'y': collab_y}
+    df_collaborators = pd.DataFrame.from_dict(dfdata)
 
-    # Releases
-    df_releases = df_releases.sort_values(ascending=True)
-    release_month = pd.to_datetime(
-        pd.Series(df_releases), format='%Y/%m/%d')
-    release_month.index = release_month.dt.to_period('m')
-    release_month = release_month.groupby(level=0).size()
-    release_month = release_month.reindex(pd.period_range(
-        release_month.index.min(), release_month.index.max(), freq='m'), fill_value=0)
-    release_month = release_month.to_dict()
+    
+    '''
+    Monthly Releases
+    Format the data by grouping the data by month
+    ''' 
+    df_releases = pd.DataFrame(release_reponse)
+    df_releases.rename(columns={'release_created_at':'ds'}, inplace=True)
+    df_releases['y'] = 1
+    df_releases = df_releases.sort_values(by=['ds'],ascending=True)
+    rel_month = pd.to_datetime(
+    pd.Series(df_releases['ds']), format='%Y/%m/%d')
+    rel_month.index = rel_month.dt.to_period('m')
+    rel_month = rel_month.groupby(level=0).size()
+    rel_month = rel_month.reindex(pd.period_range(
+        rel_month.index.min(), rel_month.index.max(), freq='m'), fill_value=0)
+    rel_month = rel_month.to_dict()
     r_data = []
-    for key in release_month.keys():
-        array = [str(key), release_month[key]]
+    for key in rel_month.keys():
+        array = [str(key), rel_month[key]]
         r_data.append(array)
+    df_releases = pd.DataFrame(r_data)
+    df_releases.rename(columns={0:'ds', 1:'y'}, inplace=True) 
 
-    # --------------------------------------
 
     '''
         1. Hit LSTM Microservice by passing issues_response as body
@@ -354,7 +410,7 @@ def github():
 
     pulls_body = {
         "issues": pull_reponse,
-        "type": "pulls",
+        "type": "pull_created_at",
         "repo": repo_name.split("/")[1]
     }
     commits_body = {
