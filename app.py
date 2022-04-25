@@ -214,23 +214,21 @@ def github():
                     data['branch_created_at'] = commit['commit']['author']['date'][0:10]
                 elif i == 3:
                     for commit in commit_data:
-
                         commit_url = requests.get(commit['url']+"?per_page=400", headers=headers)
                         temp_text = commit_url.text
                         commit = json.loads(temp_text)
                         date = commit['commit']['author']['date'][0:10]
+                        print(date)
                         month = date[:7]
                         contributor = commit['commit']['author']['email']
 
                         if month in coll_sets.keys():
                             if contributor not in coll_sets[month]:
                                 coll_sets[month].add(contributor)
-                                data['collab_created_at'] = date
+                                collaborator_reponse.append({'collab_created_at':date})
                         else:
                             coll_sets[month] = {contributor}
-                            data['collab_created_at'] = date
-                        if data != {}:
-                            collaborator_reponse.append(data)
+                            collaborator_reponse.append({'collab_created_at':date})
                 elif i == 4: # releases - DONE
                     data['release_created_at'] = item['created_at'][0:10]
 
