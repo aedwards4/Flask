@@ -450,6 +450,7 @@ def github():
 
     # Update your Google cloud deployed LSTM app URL (NOTE: DO NOT REMOVE "/")
     LSTM_API_URL = "https://lstm-7fxxr4rxjq-uc.a.run.app/" + "api/forecast"
+    FBPROPHET_API_URL = "https://fbprophet-bdqju5ggxa-uc.a.run.app/" + "api/forecast"
 
     '''
     Trigger the LSTM microservice to forecasted the created issues
@@ -490,6 +491,33 @@ def github():
 
     # --------------------------------------
 
+    # -------- FB/PROPHET --------
+    FBPROPHET_API_URL = "https://fbprophet-bdqju5ggxa-uc.a.run.app/" + "api/forecast"
+
+    fb_created_at = requests.post(FBPROPHET_API_URL,
+                                        json=created_at_body,
+                                        headers={'content-type': 'application/json'})
+
+    fb_closed_at = requests.post(FBPROPHET_API_URL,
+                                       json=closed_at_body,
+                                       headers={'content-type': 'application/json'})
+
+    fb_pulls= requests.post(FBPROPHET_API_URL,
+                                        json=pulls_body,
+                                        headers={'content-type': 'application/json'})
+    fb_commits = requests.post(FBPROPHET_API_URL,
+                                        json=commits_body,
+                                        headers={'content-type': 'application/json'})
+    fb_branches = requests.post(FBPROPHET_API_URL,
+                                        json=branches_body,
+                                        headers={'content-type': 'application/json'})
+    fb_collabs = requests.post(FBPROPHET_API_URL,
+                                        json=collaborators_body,
+                                        headers={'content-type': 'application/json'})
+    fb_releases = requests.post(FBPROPHET_API_URL,
+                                        json=releases_body,
+                                        headers={'content-type': 'application/json'})
+
 
     '''
     Create the final response that consists of:
@@ -502,25 +530,60 @@ def github():
         "starCount": repository["stargazers_count"],
         "forkCount": repository["forks_count"],
         "createdAtImageUrls": {
-            **created_at_response.json(),
+            "LSTM": {
+                **created_at_response.json(),
+            },
+            "FB": {
+                **fb_created_at.json(),
+            },
         },
         "closedAtImageUrls": {
-            **closed_at_response.json(),
+            "LSTM": {
+                **closed_at_response.json(),
+            },
+            "FB": {
+                **fb_closed_at.json(),
+            },
         },
         "pullsImageUrls": {
-            **response_p.json(),
+            "LSTM": {
+                **response_p.json(),
+            },
+            "FB": {
+                **fb_pulls.json(),
+            },
         },
         "commitsImageUrls": {
-            **response_comm.json(),
+            "LSTM": {
+                **response_comm.json(),
+            },
+            "FB": {
+                **fb_commits.json(),
+            },
         },
         "branchesImageUrls": {
-            **response_b.json(),
+            "LSTM": {
+                **response_b.json(),
+            },
+            "FB": {
+                **fb_branches.json(),
+            },
         },
         "collaboratorsImageUrls": {
-            **response_coll.json(),
+            "LSTM": {
+                **response_coll.json(),
+            },
+            "FB": {
+                **fb_collabs.json(),
+            },
         },
         "releasesImageUrls": {
-            **response_r.json(),
+            "LSTM": {
+                **response_r.json(),
+            },
+            "FB": {
+                **fb_releases.json(),
+            },
         },
     }
     # Return the response back to client (React app)
