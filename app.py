@@ -517,7 +517,35 @@ def github():
     fb_releases = requests.post(FBPROPHET_API_URL,
                                         json=releases_body,
                                         headers={'content-type': 'application/json'})
+     # --------------------------------------
 
+     # -------- STATS-MODELS --------
+    STATSMODELS_API_URL = "https://stats-models-xk57uhjxlq-uc.a.run.app/" + "api/forecast"
+
+    sm_created_at = requests.post(STATSMODELS_API_URL,
+                                        json=created_at_body,
+                                        headers={'content-type': 'application/json'})
+
+    sm_closed_at = requests.post(STATSMODELS_API_URL,
+                                       json=closed_at_body,
+                                       headers={'content-type': 'application/json'})
+
+    sm_pulls= requests.post(STATSMODELS_API_URL,
+                                        json=pulls_body,
+                                        headers={'content-type': 'application/json'})
+    sm_commits = requests.post(STATSMODELS_API_URL,
+                                        json=commits_body,
+                                        headers={'content-type': 'application/json'})
+    sm_branches = requests.post(STATSMODELS_API_URL,
+                                        json=branches_body,
+                                        headers={'content-type': 'application/json'})
+    sm_collabs = requests.post(STATSMODELS_API_URL,
+                                        json=collaborators_body,
+                                        headers={'content-type': 'application/json'})
+    sm_releases = requests.post(STATSMODELS_API_URL,
+                                        json=releases_body,
+                                        headers={'content-type': 'application/json'})
+     # --------------------------------------
 
     '''
     Create the final response that consists of:
@@ -536,6 +564,9 @@ def github():
             "FB": {
                 **fb_created_at.json(),
             },
+            "SM": {
+                **sm_created_at.json(),
+            },
         },
         "closedAtImageUrls": {
             "LSTM": {
@@ -543,6 +574,9 @@ def github():
             },
             "FB": {
                 **fb_closed_at.json(),
+            },
+            "SM": {
+                **sm_closed_at.json(),
             },
         },
         "pullsImageUrls": {
@@ -552,6 +586,9 @@ def github():
             "FB": {
                 **fb_pulls.json(),
             },
+            "SM": {
+                **sm_pulls.json(),
+            },
         },
         "commitsImageUrls": {
             "LSTM": {
@@ -559,6 +596,9 @@ def github():
             },
             "FB": {
                 **fb_commits.json(),
+            },
+            "SM": {
+                **sm_commits.json(),
             },
         },
         "branchesImageUrls": {
@@ -568,6 +608,9 @@ def github():
             "FB": {
                 **fb_branches.json(),
             },
+            "SM": {
+                **sm_branches.json(),
+            },
         },
         "collaboratorsImageUrls": {
             "LSTM": {
@@ -576,6 +619,9 @@ def github():
             "FB": {
                 **fb_collabs.json(),
             },
+            "SM": {
+                **sm_collabs.json(),
+            },
         },
         "releasesImageUrls": {
             "LSTM": {
@@ -583,6 +629,9 @@ def github():
             },
             "FB": {
                 **fb_releases.json(),
+            },
+            "SM": {
+                **sm_releases.json(),
             },
         },
     }
