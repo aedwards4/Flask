@@ -215,26 +215,28 @@ def github():
                 elif i == 3:
                     for commit in commit_data:
 
-                        commit_url = requests.get(commit['url'], headers=headers)
+                        commit_url = requests.get(commit['url']+"?per_page=400", headers=headers)
                         temp_text = commit_url.text
                         commit = json.loads(temp_text)
                         date = commit['commit']['author']['date'][0:10]
-                        date_spl = date.split('-')
-                        month = date_spl[1]
+                        month = date[:7]
                         contributor = commit['commit']['author']['email']
 
                         if month in coll_sets.keys():
-                            coll_sets[month].add(contributor)
+                            if contributor not in coll_sets[month]:
+                                coll_sets[month].add(contributor)
+                                data['collab_created_at'] = date
                         else:
                             coll_sets[month] = {contributor}
-                    
-                        
+                            data['collab_created_at'] = date
+                        if data != {}:
+                            collaborator_reponse.append(data)
                 elif i == 4: # releases - DONE
                     data['release_created_at'] = item['created_at'][0:10]
 
-                data_responses[i].append(data)
+                if i != 3:
+                    data_responses[i].append(data)
 
-    collaborator_reponse = [coll_sets]
     # --------------------------------------
 
     today = last_month
@@ -359,15 +361,23 @@ def github():
     Monthly Collaborators
     Format the data by grouping the data by month
     ''' 
-    collab_ds = []
-    collab_y = []
-    for key in coll_sets.keys():
-        count = len(coll_sets[key])
-        coll_sets[key] = count
-        collab_ds.append(key)
-        collab_y.append(coll_sets[key])
-    dfdata = {'ds': collab_ds, 'y': collab_y}
-    df_collaborators = pd.DataFrame.from_dict(dfdata)
+    df_collab = pd.DataFrame(collaborator_reponse)
+    df_collab.rename(columns={'collab_created_at':'ds'}, inplace=True)
+    df_collab['y'] = 1
+    df_collab = df_collab.sort_values(by=['ds'],ascending=True)
+    collab_month = pd.to_datetime(
+    pd.Series(df_collab['ds']), format='%Y/%m/%d')
+    collab_month.index = collab_month.dt.to_period('m')
+    collab_month = collab_month.groupby(level=0).size()
+    collab_month = collab_month.reindex(pd.period_range(
+        collab_month.index.min(), collab_month.index.max(), freq='m'), fill_value=0)
+    collab_month = collab_month.to_dict()
+    b_data = []
+    for key in collab_month.keys():
+        array = [str(key), collab_month[key]]
+        b_data.append(array)
+    df_collab = pd.DataFrame(b_data)
+    df_collab.rename(columns={0:'ds', 1:'y'}, inplace=True) 
 
     
     '''
