@@ -268,6 +268,20 @@ def github():
         temp_dict = {"daily_created_at": temp_day, "num_issues": day_issue_created_dict[key]}
         weekday_created_at.append(temp_dict)
 
+    data_frame = pd.DataFrame(weekday_created_at)
+    df = data_frame.groupby("daily_created_at", as_index=False).sum()
+    weekday_sums = df.to_dict()
+    max_issues = 0 
+    weekday = -1
+    for key in weekday_sums['num_issues'].keys():
+        if weekday_sums['num_issues'][key] > max_issues:
+            max_issues = weekday_sums['num_issues'][key]
+            weekday = key
+
+    days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+    day_max_issues_created = days[weekday]
+    print(day_max_issues_created)
+
     '''
     Day of Week with Max closed issues
     ''' 
@@ -284,6 +298,19 @@ def github():
         temp_day = key.to_timestamp().weekday()
         temp_dict = {"daily_closed_at": temp_day, "num_issues": day_issue_closed_dict[key]}
         weekday_closed_at.append(temp_dict)
+
+    data_frame = pd.DataFrame(weekday_closed_at)
+    df = data_frame.groupby("daily_closed_at", as_index=False).sum()
+    weekday_sums = df.to_dict()
+    max_issues = 0 
+    weekday = -1
+    for key in weekday_sums['num_issues'].keys():
+        if weekday_sums['num_issues'][key] > max_issues:
+            max_issues = weekday_sums['num_issues'][key]
+            weekday = key
+
+    days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+    day_max_issues_closed = days[weekday]
 
 
     '''
@@ -321,7 +348,17 @@ def github():
         array = [str(key), month_issue_closed_dict[key]]
         closed_at_issues.append(array)
 
+    maxClosed = 0
+    month = ""
+    for data in closed_at_issues:
+        if data[1] > maxClosed:
+            maxClosed = data[1]
+            month = data[0][-2:]
 
+    months = {'01':'january', '02':'february', '03':'march', '04':'april', '05':'may', '06':'june',
+            '07':'july', '08':'august', '09':'september', '10':'october', '11':'november', '12':'december'}
+
+    month_max_issues_closed = days[weekday]
 
     # -------- DATA FOR FORECASTING --------
 
@@ -460,17 +497,17 @@ def github():
 
     # -------- DATA FOR FORECASTING --------
 
-    daily_created_at_body = {
-        "issues": weekday_created_at,
-        "type": "daily_created_at",
-        "repo": repo_name.split("/")[1]
-    }
+    # daily_created_at_body = {
+    #     "issues": weekday_created_at,
+    #     "type": "daily_created_at",
+    #     "repo": repo_name.split("/")[1]
+    # }
 
-    daily_closed_at_body = {
-        "issues": weekday_closed_at,
-        "type": "daily_closed_at",
-        "repo": repo_name.split("/")[1]
-    }
+    # daily_closed_at_body = {
+    #     "issues": weekday_closed_at,
+    #     "type": "daily_closed_at",
+    #     "repo": repo_name.split("/")[1]
+    # }
 
     pulls_body = {
         "issues": pull_reponse,
@@ -525,12 +562,12 @@ def github():
 
     # -------- DATA FOR FORECASTING --------
 
-    response_daily_created_at = requests.post(LSTM_API_URL,
-                                        json=daily_created_at_body,
-                                        headers={'content-type': 'application/json'})
-    response_daily_closed_at = requests.post(LSTM_API_URL,
-                                        json=daily_closed_at_body,
-                                        headers={'content-type': 'application/json'})
+    # response_daily_created_at = requests.post(LSTM_API_URL,
+    #                                     json=daily_created_at_body,
+    #                                     headers={'content-type': 'application/json'})
+    # response_daily_closed_at = requests.post(LSTM_API_URL,
+    #                                     json=daily_closed_at_body,
+    #                                     headers={'content-type': 'application/json'})
     response_p = requests.post(LSTM_API_URL,
                                         json=pulls_body,
                                         headers={'content-type': 'application/json'})
@@ -559,12 +596,12 @@ def github():
     fb_closed_at = requests.post(FBPROPHET_API_URL,
                                        json=closed_at_body,
                                        headers={'content-type': 'application/json'})
-    fb_daily_created_at = requests.post(FBPROPHET_API_URL,
-                                        json=daily_created_at_body,
-                                        headers={'content-type': 'application/json'})
-    fb_daily_closed_at = requests.post(FBPROPHET_API_URL,
-                                        json=daily_closed_at_body,
-                                        headers={'content-type': 'application/json'})
+    # fb_daily_created_at = requests.post(FBPROPHET_API_URL,
+    #                                     json=daily_created_at_body,
+    #                                     headers={'content-type': 'application/json'})
+    # fb_daily_closed_at = requests.post(FBPROPHET_API_URL,
+    #                                     json=daily_closed_at_body,
+    #                                     headers={'content-type': 'application/json'})
     fb_pulls= requests.post(FBPROPHET_API_URL,
                                         json=pulls_body,
                                         headers={'content-type': 'application/json'})
@@ -592,12 +629,12 @@ def github():
     sm_closed_at = requests.post(STATSMODELS_API_URL,
                                        json=closed_at_body,
                                        headers={'content-type': 'application/json'})
-    sm_daily_created_at = requests.post(STATSMODELS_API_URL,
-                                        json=created_at_body,
-                                        headers={'content-type': 'application/json'})
-    sm_daily_closed_at = requests.post(STATSMODELS_API_URL,
-                                       json=closed_at_body,
-                                       headers={'content-type': 'application/json'})
+    # sm_daily_created_at = requests.post(STATSMODELS_API_URL,
+    #                                     json=created_at_body,
+    #                                     headers={'content-type': 'application/json'})
+    # sm_daily_closed_at = requests.post(STATSMODELS_API_URL,
+    #                                    json=closed_at_body,
+    #                                    headers={'content-type': 'application/json'})
     sm_pulls= requests.post(STATSMODELS_API_URL,
                                         json=pulls_body,
                                         headers={'content-type': 'application/json'})
@@ -625,6 +662,9 @@ def github():
         "closed": closed_at_issues,
         "starCount": repository["stargazers_count"],
         "forkCount": repository["forks_count"],
+        "dailyCreatedMax": day_max_issues_created,
+        "dailyClosedMax": day_max_issues_closed,
+        "monthlyClosedMax": month_max_issues_closed,
         "createdAtImageUrls": {
             "LSTM": {
                 **created_at_response.json(),
@@ -645,28 +685,6 @@ def github():
             },
             "SM": {
                 **sm_closed_at.json(),
-            },
-        },
-        "createdAtImageUrlsDaily": {
-            "LSTM": {
-                **response_daily_created_at.json(),
-            },
-            "FB": {
-                **fb_daily_created_at.json(),
-            },
-            "SM": {
-                **sm_daily_created_at.json(),
-            },
-        },
-        "closedAtImageUrlsDaily": {
-            "LSTM": {
-                **response_daily_closed_at.json(),
-            },
-            "FB": {
-                **fb_daily_closed_at.json(),
-            },
-            "SM": {
-                **sm_daily_closed_at.json(),
             },
         },
         "pullsImageUrls": {
