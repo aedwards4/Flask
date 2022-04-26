@@ -100,7 +100,7 @@ def github():
 
     # --------------------------------------
 
-    today = date.today()
+    # today = date.today()
 
     issues_reponse = []
     # Iterating to get issues for every month for the past 12 months
