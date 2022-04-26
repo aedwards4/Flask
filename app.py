@@ -269,8 +269,8 @@ def github():
         weekday_created_at.append(temp_dict)
 
     data_frame = pd.DataFrame(weekday_created_at)
-    df = data_frame.groupby("daily_created_at", as_index=False).sum()
-    weekday_sums = df.to_dict()
+    df2 = data_frame.groupby("daily_created_at", as_index=False).sum()
+    weekday_sums = df2.to_dict()
     max_issues = 0 
     weekday = -1
     for key in weekday_sums['num_issues'].keys():
@@ -300,8 +300,8 @@ def github():
         weekday_closed_at.append(temp_dict)
 
     data_frame = pd.DataFrame(weekday_closed_at)
-    df = data_frame.groupby("daily_closed_at", as_index=False).sum()
-    weekday_sums = df.to_dict()
+    df2 = data_frame.groupby("daily_closed_at", as_index=False).sum()
+    weekday_sums = df2.to_dict()
     max_issues = 0 
     weekday = -1
     for key in weekday_sums['num_issues'].keys():
