@@ -61,7 +61,6 @@ This API will accept only POST request
 '''
 @app.route('/api/github', methods=['POST'])
 def github():
-    global date
     global today
 
     body = request.get_json()
