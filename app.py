@@ -282,6 +282,7 @@ def github():
     day_issue_closed_dict = day_issue_closed.to_dict()
     weekday_closed_at = []
     for key in day_issue_closed_dict.keys():
+        temp_date = key.to_timestamp()
         temp_day = date.weekday(temp_date)
         temp_dict = {"daily_closed_at": temp_day, "num_issues": day_issue_closed_dict[key]}
         weekday_closed_at.append(temp_dict)
