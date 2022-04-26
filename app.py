@@ -249,68 +249,6 @@ def github():
 
     dataFrameCreated.columns = ['date', 'count']
     dataFrameClosed.columns = ['date', 'count']
-    
-    '''
-    Day of Week with Max created issues
-    ''' 
-    daily_created_at = df['created_at']
-    day_issue_created = pd.to_datetime(
-        pd.Series(daily_created_at), format='%Y/%m/%d')
-    day_issue_created.index = day_issue_created.dt.to_period('d')
-    day_issue_created = day_issue_created.groupby(level=0).size()
-    day_issue_created = day_issue_created.reindex(pd.period_range(
-        day_issue_created.index.min(), day_issue_created.index.max(), freq='d'), fill_value=0)
-    day_issue_created_dict = day_issue_created.to_dict()
-    weekday_created_at = []
-    for key in day_issue_created_dict.keys():
-        # temp_date = key.to_timestamp().to_pydatetime()
-        temp_day = key.to_timestamp().weekday()
-        temp_dict = {"daily_created_at": temp_day, "num_issues": day_issue_created_dict[key]}
-        weekday_created_at.append(temp_dict)
-
-    data_frame = pd.DataFrame(weekday_created_at)
-    df2 = data_frame.groupby("daily_created_at", as_index=False).sum()
-    weekday_sums = df2.to_dict()
-    max_issues = 0 
-    weekday = -1
-    for key in weekday_sums['num_issues'].keys():
-        if weekday_sums['num_issues'][key] > max_issues:
-            max_issues = weekday_sums['num_issues'][key]
-            weekday = key
-
-    days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-    day_max_issues_created = days[weekday]
-    print(day_max_issues_created)
-
-    '''
-    Day of Week with Max closed issues
-    ''' 
-    daily_closed_at = df['closed_at']
-    day_issue_closed = pd.to_datetime(
-        pd.Series(daily_closed_at), format='%Y/%m/%d')
-    day_issue_closed.index = day_issue_closed.dt.to_period('d')
-    day_issue_closed = day_issue_closed.groupby(level=0).size()
-    day_issue_closed = day_issue_closed.reindex(pd.period_range(
-        day_issue_closed.index.min(), day_issue_closed.index.max(), freq='d'), fill_value=0)
-    day_issue_closed_dict = day_issue_closed.to_dict()
-    weekday_closed_at = []
-    for key in day_issue_closed_dict.keys():
-        temp_day = key.to_timestamp().weekday()
-        temp_dict = {"daily_closed_at": temp_day, "num_issues": day_issue_closed_dict[key]}
-        weekday_closed_at.append(temp_dict)
-
-    data_frame = pd.DataFrame(weekday_closed_at)
-    df2 = data_frame.groupby("daily_closed_at", as_index=False).sum()
-    weekday_sums = df2.to_dict()
-    max_issues = 0 
-    weekday = -1
-    for key in weekday_sums['num_issues'].keys():
-        if weekday_sums['num_issues'][key] > max_issues:
-            max_issues = weekday_sums['num_issues'][key]
-            weekday = key
-
-    days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-    day_max_issues_closed = days[weekday]
 
 
     '''
@@ -350,15 +288,77 @@ def github():
 
     maxClosed = 0
     month = ""
-    for data in closed_at_issues:
-        if data[1] > maxClosed:
-            maxClosed = data[1]
-            month = data[0][-2:]
+    for data2 in closed_at_issues:
+        if data2[1] > maxClosed:
+            maxClosed = data2[1]
+            month = data2[0][-2:]
 
     months = {'01':'january', '02':'february', '03':'march', '04':'april', '05':'may', '06':'june',
             '07':'july', '08':'august', '09':'september', '10':'october', '11':'november', '12':'december'}
 
     month_max_issues_closed = days[weekday]
+
+    '''
+    Day of Week with Max closed issues
+    ''' 
+    daily_closed_at = df['closed_at']
+    day_issue_closed = pd.to_datetime(
+        pd.Series(daily_closed_at), format='%Y/%m/%d')
+    day_issue_closed.index = day_issue_closed.dt.to_period('d')
+    day_issue_closed = day_issue_closed.groupby(level=0).size()
+    day_issue_closed = day_issue_closed.reindex(pd.period_range(
+        day_issue_closed.index.min(), day_issue_closed.index.max(), freq='d'), fill_value=0)
+    day_issue_closed_dict = day_issue_closed.to_dict()
+    weekday_closed_at = []
+    for key in day_issue_closed_dict.keys():
+        temp_day = key.to_timestamp().weekday()
+        temp_dict = {"daily_closed_at": temp_day, "num_issues": day_issue_closed_dict[key]}
+        weekday_closed_at.append(temp_dict)
+
+    data_frame = pd.DataFrame(weekday_closed_at)
+    df2 = data_frame.groupby("daily_closed_at", as_index=False).sum()
+    weekday_sums = df2.to_dict()
+    max_issues = 0 
+    weekday = -1
+    for key in weekday_sums['num_issues'].keys():
+        if weekday_sums['num_issues'][key] > max_issues:
+            max_issues = weekday_sums['num_issues'][key]
+            weekday = key
+
+    days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+    day_max_issues_closed = days[weekday]
+
+    '''
+    Day of Week with Max created issues
+    ''' 
+    daily_created_at = df['created_at']
+    day_issue_created = pd.to_datetime(
+        pd.Series(daily_created_at), format='%Y/%m/%d')
+    day_issue_created.index = day_issue_created.dt.to_period('d')
+    day_issue_created = day_issue_created.groupby(level=0).size()
+    day_issue_created = day_issue_created.reindex(pd.period_range(
+        day_issue_created.index.min(), day_issue_created.index.max(), freq='d'), fill_value=0)
+    day_issue_created_dict = day_issue_created.to_dict()
+    weekday_created_at = []
+    for key in day_issue_created_dict.keys():
+        # temp_date = key.to_timestamp().to_pydatetime()
+        temp_day = key.to_timestamp().weekday()
+        temp_dict = {"daily_created_at": temp_day, "num_issues": day_issue_created_dict[key]}
+        weekday_created_at.append(temp_dict)
+
+    data_frame = pd.DataFrame(weekday_created_at)
+    df2 = data_frame.groupby("daily_created_at", as_index=False).sum()
+    weekday_sums = df2.to_dict()
+    max_issues = 0 
+    weekday = -1
+    for key in weekday_sums['num_issues'].keys():
+        if weekday_sums['num_issues'][key] > max_issues:
+            max_issues = weekday_sums['num_issues'][key]
+            weekday = key
+
+    days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+    day_max_issues_created = days[weekday]
+    print(day_max_issues_created)
 
     # -------- DATA FOR FORECASTING --------
 
