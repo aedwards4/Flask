@@ -101,7 +101,7 @@ def github():
 
     # --------------------------------------
 
-    #today = date.today()
+    today = date.today()
 
     issues_reponse = []
     # Iterating to get issues for every month for the past 12 months
@@ -158,6 +158,8 @@ def github():
             # Get Author of issue
             data['Author'] = current_issue["user"]["login"]
             issues_reponse.append(data)
+
+        today = last_month
 
     # -------- DATA FOR FORECASTING --------
 
@@ -237,14 +239,52 @@ def github():
 
     # --------------------------------------
 
-    today = last_month
-
     df = pd.DataFrame(issues_reponse)
 
     # Daily Created Issues
     df_created_at = df.groupby(['created_at'], as_index=False).count()
+    df_closed_at = df.groupby(['closed_at'], as_index=False).count()
+
     dataFrameCreated = df_created_at[['created_at', 'issue_number']]
+    dataFrameClosed = df_closed_at[['closed_at', 'issue_number']]
+
     dataFrameCreated.columns = ['date', 'count']
+    dataFrameClosed.columns = ['date', 'count']
+    
+    '''
+    Day of Week with Max created issues
+    ''' 
+    daily_created_at = df['created_at']
+    day_issue_created = pd.to_datetime(
+        pd.Series(daily_created_at), format='%Y/%m/%d')
+    day_issue_created.index = day_issue_created.dt.to_period('d')
+    day_issue_created = day_issue_created.groupby(level=0).size()
+    day_issue_created = day_issue_created.reindex(pd.period_range(
+        day_issue_created.index.min(), day_issue_created.index.max(), freq='d'), fill_value=0)
+    day_issue_created_dict = day_issue_created.to_dict()
+    weekday_created_at = []
+    for key in day_issue_created_dict.keys():
+        temp_date = key.to_timestamp()
+        temp_dict = {"daily_created_at":date.weekday(temp_date), "num_issues":month_issue_created_dict[key]}
+        weekday_created_at.append(temp_dict)
+
+    '''
+    Day of Week with Max closed issues
+    ''' 
+    daily_closed_at = df['closed_at']
+    day_issue_closed = pd.to_datetime(
+        pd.Series(daily_closed_at), format='%Y/%m/%d')
+    day_issue_closed.index = day_issue_closed.dt.to_period('d')
+    day_issue_closed = day_issue_closed.groupby(level=0).size()
+    day_issue_closed = day_issue_closed.reindex(pd.period_range(
+        day_issue_closed.index.min(), day_issue_closed.index.max(), freq='d'), fill_value=0)
+    day_issue_closed_dict = day_issue_closed.to_dict()
+    weekday_closed_at = []
+    for key in day_issue_closed_dict.keys():
+        temp_date = key.to_timestamp()
+        temp_dict = {"daily_created_at":date.weekday(temp_date), "num_issues":month_issue_created_dict[key]}
+        weekday_closed_at.append(temp_dict)
+
 
     '''
     Monthly Created Issues
@@ -265,7 +305,7 @@ def github():
 
     '''
     Monthly Closed Issues
-    Format the data by grouping the data by WEEK
+    Format the data by grouping the data by WEEK 
     ''' 
     
     closed_at = df['closed_at'].sort_values(ascending=True)
@@ -420,6 +460,18 @@ def github():
 
     # -------- DATA FOR FORECASTING --------
 
+    daily_created_at_body = {
+        "issues": weekday_created_at,
+        "type": "daily_created_at",
+        "repo": repo_name.split("/")[1]
+    }
+
+    daily_closed_at_body = {
+        "issues": weekday_closed_at,
+        "type": "daily_closed_at",
+        "repo": repo_name.split("/")[1]
+    }
+
     pulls_body = {
         "issues": pull_reponse,
         "type": "pull_created_at",
@@ -473,6 +525,12 @@ def github():
 
     # -------- DATA FOR FORECASTING --------
 
+    response_daily_created_at = requests.post(LSTM_API_URL,
+                                        json=daily_created_at_body,
+                                        headers={'content-type': 'application/json'})
+    response_daily_closed_at = requests.post(LSTM_API_URL,
+                                        json=daily_closed_at_body,
+                                        headers={'content-type': 'application/json'})
     response_p = requests.post(LSTM_API_URL,
                                         json=pulls_body,
                                         headers={'content-type': 'application/json'})
@@ -501,7 +559,12 @@ def github():
     fb_closed_at = requests.post(FBPROPHET_API_URL,
                                        json=closed_at_body,
                                        headers={'content-type': 'application/json'})
-
+    fb_daily_created_at = requests.post(FBPROPHET_API_URL,
+                                        json=daily_created_at_body,
+                                        headers={'content-type': 'application/json'})
+    fb_daily_closed_at = requests.post(FBPROPHET_API_URL,
+                                        json=daily_closed_at_body,
+                                        headers={'content-type': 'application/json'})
     fb_pulls= requests.post(FBPROPHET_API_URL,
                                         json=pulls_body,
                                         headers={'content-type': 'application/json'})
@@ -529,7 +592,12 @@ def github():
     sm_closed_at = requests.post(STATSMODELS_API_URL,
                                        json=closed_at_body,
                                        headers={'content-type': 'application/json'})
-
+    sm_daily_created_at = requests.post(STATSMODELS_API_URL,
+                                        json=created_at_body,
+                                        headers={'content-type': 'application/json'})
+    sm_daily_closed_at = requests.post(STATSMODELS_API_URL,
+                                       json=closed_at_body,
+                                       headers={'content-type': 'application/json'})
     sm_pulls= requests.post(STATSMODELS_API_URL,
                                         json=pulls_body,
                                         headers={'content-type': 'application/json'})
@@ -577,6 +645,28 @@ def github():
             },
             "SM": {
                 **sm_closed_at.json(),
+            },
+        },
+        "createdAtImageUrlsDaily": {
+            "LSTM": {
+                **response_daily_created_at.json(),
+            },
+            "FB": {
+                **fb_daily_created_at.json(),
+            },
+            "SM": {
+                **sm_daily_created_at.json(),
+            },
+        },
+        "closedAtImageUrlsDaily": {
+            "LSTM": {
+                **response_daily_closed_at.json(),
+            },
+            "FB": {
+                **fb_daily_closed_at.json(),
+            },
+            "SM": {
+                **sm_daily_closed_at.json(),
             },
         },
         "pullsImageUrls": {
