@@ -293,6 +293,7 @@ def github():
             maxClosed = data2[1]
             month = data2[0][-2:]
 
+    days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
     months = {'01':'january', '02':'february', '03':'march', '04':'april', '05':'may', '06':'june',
             '07':'july', '08':'august', '09':'september', '10':'october', '11':'november', '12':'december'}
 
@@ -325,7 +326,7 @@ def github():
             max_issues = weekday_sums['num_issues'][key]
             weekday = key
 
-    days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+    
     day_max_issues_closed = days[weekday]
 
     '''
