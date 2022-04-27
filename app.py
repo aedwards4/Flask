@@ -297,7 +297,7 @@ def github():
     months = {'01':'january', '02':'february', '03':'march', '04':'april', '05':'may', '06':'june',
             '07':'july', '08':'august', '09':'september', '10':'october', '11':'november', '12':'december'}
 
-    month_max_issues_closed = days[weekday]
+    month_max_issues_closed = months[month]
 
     '''
     Day of Week with Max closed issues
